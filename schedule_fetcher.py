@@ -11,6 +11,9 @@ warnings.simplefilter('ignore', InsecureRequestWarning)
 def fetch_schedule(url):
     response = requests.get(url, verify=False)
 
+    # Fetch update time from the webpage
+    update_time = fetch_update_time(url)
+
     if response.status_code == 200:
         soup = BeautifulSoup(response.content, 'html.parser')
         blocks = soup.find_all('div', class_='block_nr')
@@ -56,3 +59,14 @@ def fetch_schedule(url):
     else:
         print(f"Failed to retrieve the schedule, status code: {response.status_code}")
         return []
+    
+def fetch_update_time(url):
+    response = requests.get(url,verify=False)
+    soup = BeautifulSoup(response.content, 'html.parser')
+    update_time_span = soup.find("span", class_="head_info")
+    if update_time_span:
+        update_time_text = update_time_span.get_text()
+        print(update_time_text)
+        update_time = update_time_text.split("i:")[1]
+        return update_time
+    return None

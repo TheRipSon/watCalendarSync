@@ -35,9 +35,19 @@ def add_or_update_event(service, event_dict, calendarId):
         return  # Skip the event if times are incorrect
 
     if events:
-        event = events[0]
+        event = events[0]  # Get the first matching event
+
+        # Update relevant fields from event_dict
+        event['summary'] = event_dict['summary']
+        event['description'] = event_dict['description']
+        event['location'] = event_dict.get('location', event.get('location', ''))  # Update location if provided
         event['start'] = event_dict['start']
         event['end'] = event_dict['end']
+        
+        # Add or update additional fields as necessary
+        # event['colorId'] = event_dict.get('colorId', event.get('colorId', ''))
+        # Add any other fields you may want to update
+
         updated_event = service.events().update(calendarId=calendarId, eventId=event['id'], body=event).execute()
         print(f'Event updated: {updated_event.get("htmlLink")}')
     else:

@@ -1,7 +1,7 @@
 # main.py
 import os
 from google_calendar import authenticate_google_calendar, add_or_update_event, fetch_existing_events
-from schedule_fetcher import fetch_schedule
+from schedule_fetcher import fetch_schedule, fetch_update_time
 from googleapiclient.discovery import build
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
@@ -9,6 +9,9 @@ from datetime import datetime, timedelta
 def main():
     url = 'https://planzajec.wcy.wat.edu.pl/pl/rozklad?date=1727647200&grupa_id=WCY23KA1S4'
     
+    # Fetch update time from the webpage
+    update_time = fetch_update_time(url)
+
     lessons_for_calendar = fetch_schedule(url)
     creds = authenticate_google_calendar()
     service = build('calendar', 'v3', credentials=creds)
@@ -28,6 +31,9 @@ def main():
     existing_event_summaries = {event['summary'] for event in existing_events}
 
     for lesson in lessons_for_calendar:
+        # Append update time to the description
+        if update_time:
+            lesson['description'] += f"\n\nData aktualizacji: {update_time}"
         if lesson['summary'] in existing_event_summaries:
             # Update the existing event
             print(f'Updating existing event: {lesson["summary"]}')
