@@ -35,16 +35,20 @@ def fetch_schedule(url):
                 start_time, end_time = block_info[block_id]
                 lessons.append({
                     'summary': name,
+                    'description': info,  # Optional
+                    'location': None,  # Optional: None if no location
                     'start': {
-                        'dateTime': f"{date}T{start_time}:00",  # Assuming the date is in YYYY-MM-DD format
-                        'timeZone': 'Europe/Warsaw',  # Adjust as necessary
-                    },
-                    'end': {
-                        'dateTime': f"{date}T{end_time}:00",
+                        'dateTime': f"{date.replace('_', '-') }T{start_time}:00",  # Corrected format
                         'timeZone': 'Europe/Warsaw',
                     },
-                    'description': info,
+                    'end': {
+                        'dateTime': f"{date.replace('_', '-') }T{end_time}:00",  # Corrected format
+                        'timeZone': 'Europe/Warsaw',
+                    },
                 })
+                print("Formatted start time:", f"{date.replace('_', '-') }T{start_time}:00")
+                print("Formatted end time:", f"{date.replace('_', '-') }T{end_time}:00")
+
             else:
                 print(f"Block ID {block_id} not found in block information.")
 

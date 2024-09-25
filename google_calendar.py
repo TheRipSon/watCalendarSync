@@ -23,16 +23,32 @@ def authenticate_google_calendar():
             token.write(creds.to_json())
     return creds
 
-def add_or_update_event(service, event_dict):
-    existing_events = service.events().list(calendarId='primary', q=event_dict['summary']).execute()
+def add_or_update_event(service, event_dict, calendarId):
+    existing_events = service.events().list(calendarId=calendarId, q=event_dict['summary']).execute()
     events = existing_events.get('items', [])
+
+    print(f"Event to insert/update: {event_dict}")  # Debug print
+
+    # Ensure the start time is before the end time
+    if event_dict['start']['dateTime'] >= event_dict['end']['dateTime']:
+        print("Error: Start time must be before end time.")
+        return  # Skip the event if times are incorrect
 
     if events:
         event = events[0]
         event['start'] = event_dict['start']
         event['end'] = event_dict['end']
-        updated_event = service.events().update(calendarId='primary', eventId=event['id'], body=event).execute()
+        updated_event = service.events().update(calendarId=calendarId, eventId=event['id'], body=event).execute()
         print(f'Event updated: {updated_event.get("htmlLink")}')
     else:
-        created_event = service.events().insert(calendarId='primary', body=event_dict).execute()
-        print(f'Event created: {created_event.get("htmlLink")}')
+        try:
+            created_event = service.events().insert(calendarId=calendarId, body=event_dict).execute()
+            print(f'Event created: {created_event.get("htmlLink")}')
+        except Exception as e:
+            print(f'Error creating event: {e}')
+
+def fetch_existing_events(service, calendar_id, start_time, end_time):
+    events_result = service.events().list(calendarId=calendar_id, timeMin=start_time,
+                                          timeMax=end_time, singleEvents=True,
+                                          orderBy='startTime').execute()
+    return events_result.get('items', [])
