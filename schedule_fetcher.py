@@ -11,9 +11,6 @@ warnings.simplefilter('ignore', InsecureRequestWarning)
 def fetch_schedule(url):
     response = requests.get(url, verify=False)
 
-    # Fetch update time from the webpage
-    update_time = fetch_update_time(url)
-
     if response.status_code == 200:
         soup = BeautifulSoup(response.content, 'html.parser')
         blocks = soup.find_all('div', class_='block_nr')
