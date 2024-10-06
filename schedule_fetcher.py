@@ -34,8 +34,8 @@ def fetch_schedule(url):
             if block_id in block_info:
                 start_time, end_time = block_info[block_id]
                 lessons.append({
-                    'summary': name,
-                    'description': info,  # Optional
+                    'summary': info +' '+ name,
+                    'description': info +'\n'+name,  # Optional
                     'location': None,  # Optional: None if no location
                     'start': {
                         'dateTime': f"{date.replace('_', '-') }T{start_time}:00",  # Corrected format

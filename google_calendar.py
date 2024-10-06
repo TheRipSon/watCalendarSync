@@ -23,7 +23,19 @@ def authenticate_google_calendar():
             token.write(creds.to_json())
     return creds
 
+def events_are_equal(event1, event2):
+    """
+    Helper function to check if two events are equal.
+    We compare the summary, start time, end time, location, and description.
+    """
+    return (event1['summary'] == event2['summary'] and
+            event1['start'] == event2['start'] and
+            event1['end'] == event2['end'] and
+            event1.get('location', '') == event2.get('location', '') and
+            event1.get('description', '') == event2.get('description', ''))
+
 def add_or_update_event(service, event_dict, calendarId):
+    # Fetch existing events matching the summary (to minimize API calls)
     existing_events = service.events().list(calendarId=calendarId, q=event_dict['summary']).execute()
     events = existing_events.get('items', [])
 
@@ -37,17 +49,18 @@ def add_or_update_event(service, event_dict, calendarId):
     if events:
         event = events[0]  # Get the first matching event
 
-        # Update relevant fields from event_dict
+        # If the existing event is identical to the new one, skip the update
+        if events_are_equal(event, event_dict):
+            print(f'Skipping update for identical event: {event["summary"]}')
+            return
+
+        # Update relevant fields from event_dict if there's any difference
         event['summary'] = event_dict['summary']
         event['description'] = event_dict['description']
-        event['location'] = event_dict.get('location', event.get('location', ''))  # Update location if provided
+        event['location'] = event_dict.get('location', event.get('location', ''))
         event['start'] = event_dict['start']
         event['end'] = event_dict['end']
         
-        # Add or update additional fields as necessary
-        # event['colorId'] = event_dict.get('colorId', event.get('colorId', ''))
-        # Add any other fields you may want to update
-
         updated_event = service.events().update(calendarId=calendarId, eventId=event['id'], body=event).execute()
         print(f'Event updated: {updated_event.get("htmlLink")}')
     else:
@@ -56,6 +69,7 @@ def add_or_update_event(service, event_dict, calendarId):
             print(f'Event created: {created_event.get("htmlLink")}')
         except Exception as e:
             print(f'Error creating event: {e}')
+
 
 def fetch_existing_events(service, calendar_id, start_time, end_time):
     events_result = service.events().list(calendarId=calendar_id, timeMin=start_time,
