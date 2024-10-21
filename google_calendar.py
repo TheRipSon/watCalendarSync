@@ -11,16 +11,29 @@ SCOPES = ['https://www.googleapis.com/auth/calendar']
 
 def authenticate_google_calendar():
     creds = None
+    # Check if we already have token.json for previously authorized credentials
     if os.path.exists('token.json'):
         creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+    
+    # If credentials are invalid or do not exist, or are expired, refresh or get new ones
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
+            try:
+                creds.refresh(Request())
+                print("Token refreshed successfully.")
+            except Exception as e:
+                print(f"Error refreshing token: {e}. Re-authenticating...")
+                creds = None  # Clear credentials to re-authenticate if refresh fails
+        if not creds:
+            # If there's no valid creds or refresh fails, prompt re-authentication
             flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES)
             creds = flow.run_local_server(port=0)
+            print("Authenticated and obtained new token.")
+        
+        # Save the credentials for the next run
         with open('token.json', 'w') as token:
             token.write(creds.to_json())
+    
     return creds
 
 def events_are_equal(event1, event2):
